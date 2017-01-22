@@ -65,11 +65,11 @@ class Beach(Scene):
     def rand_type(self):
         type = randrange(1,3)
         if type is 1:
-            return 'onda_pequena'
-        #elif type is 2:
-            #return 'onda_media'
+            return 'onda'
+        elif type is 2:
+            return 'ondao'
         else:
-            return 'onda_grande'
+            return 'ondazao'
 
     def fim_onda(self):
         self.num_onda -= 1
@@ -125,7 +125,7 @@ class Frango(GameObject):
         self.scale = 6
         self._layer = 2
         self.state = self.STATE_ADVANCING
-        self.aproximacao_x = Point(10,0)
+        self.aproximacao_x = Point(10, 0)
         self.dest.topleft = Point(-self.rect.w, self.screen_size.y // 4)
 
     def update(self):
@@ -138,12 +138,13 @@ class Frango(GameObject):
 
 class Onda(GameObject):
     def __init__(self, time, type, game_data):
+        self.animation_names = ['waving']
         GameObject.__init__(self, type, game_data)
-        self.scale = 1
+        self.scale = 4
         self.tags.append('onda')
         self._layer = 3
-        tamanho_onda = self.image.get_size()[1]
-        self.inicio_wave = Point(self.screen_size.x + time, self.screen_size.y // 1.15 - tamanho_onda)
+        tamanho_onda = self.rect.h
+        self.inicio_wave = Point(self.screen_size.x + time, self.screen_size.y // 1.10 - tamanho_onda)
         self.dest.topleft = self.inicio_wave
         self.vel_onda = Point(-20, 0)
 
