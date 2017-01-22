@@ -52,7 +52,7 @@ class GameObject(Sprite):
     def render(self):
         if self.animation:
             name = self.animation.render(self.dest, self.fixed, self.angle, self.scale)
-            if name != self.current_animation_name:
+            if name != self.current_animation_name and name:
                 self.animation_dict[name].reset()
                 self.current_animation_name = name
         else:
