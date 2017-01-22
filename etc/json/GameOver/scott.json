@@ -1,0 +1,17 @@
+{
+    "width": 864,
+    "height": 280,
+    "tilewidth": 108,
+    "tileheight": 141,
+    "tilecount": 20,
+    "animations":{
+        "running": {
+            "time": 100,
+            "tiles": [0, 1, 2, 3, 4, 5, 6, 7]
+        },
+        "jumping": {
+            "time": 250,
+            "tiles": [5]
+        }
+    }
+}

@@ -1,0 +1,13 @@
+{
+    "width": 425,
+    "height": 180,
+    "tilewidth": 85,
+    "tileheight": 90,
+    "tilecount": 10,
+    "animations":{
+        "waving": {
+            "time": 100,
+            "tiles": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        }
+    }
+}

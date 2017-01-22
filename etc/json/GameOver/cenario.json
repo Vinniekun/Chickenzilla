@@ -1,0 +1,25 @@
+{
+    "width": 7680,
+    "height": 1080,
+    "tilewidth": 1920,
+    "tileheight": 1080,
+    "tilecount": 4,
+    "animations":{
+        "bg1": {
+            "time": 250,
+            "tiles": [0]
+        },
+	"bg2": {
+            "time": 250,
+            "tiles": [1]
+        },
+	"bg3": {
+            "time": 250,
+            "tiles": [2]
+        },
+	"bg4": {
+            "time": 250,
+            "tiles": [3]
+        }
+    }
+}

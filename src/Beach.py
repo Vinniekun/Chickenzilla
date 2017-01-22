@@ -7,6 +7,8 @@ from engine.Animation import Animation
 from engine.TileMap import TileMap
 from engine import Physics
 from random import randrange
+from engine.managers import Sound
+from GameOver import GameOver
 
 class Beach(Scene):
     def __init__(self):
@@ -28,21 +30,24 @@ class Beach(Scene):
             background.dest.topleft = Point((bg-1) * 1920, 0)
             self.game_objects.append(background)
         self.game_objects.append(MarChao(game_data))
+        Sound.play('songloop.wav')
+
         self.next_bg = 4
         Scene.start(self, game_data)
 
 
     def update(self):
         self.intervalo_tempo += self.system.delta_time
-        self.intervalo_item += self.system.delta_time
         self.check_onda()
         if self.chicken:
+            self.intervalo_item += self.system.delta_time
             self.check_item()
             self.create_item()
         Scene.update(self)
 
     def check_onda(self):
-        if self.num_onda < 2:
+        if self.num_onda < 1:
+            self.gera_onda()
             self.gera_onda()
 
     def check_item(self):
@@ -58,11 +63,12 @@ class Beach(Scene):
         self.intervalo_tempo = 0
 
     def gera_item(self):
-        self.num_item += 1
-        self.intervalo_spawn_item = self.rand_item_tempo()
+        if self.chicken:
+            self.num_item += 1
+            self.intervalo_spawn_item = self.rand_item_tempo()
 
     def create_item(self):
-        if self.intervalo_item >= self.intervalo_spawn_item:
+        if self.intervalo_item >= self.intervalo_spawn_item and self.chicken:
             print("adicionou o item")
             self.game_objects.append(Items('uva', self.game_data))
             self.layers.add(self.game_objects[-1])
@@ -70,7 +76,7 @@ class Beach(Scene):
             self.num_item = 0
 
     def rand_item_tempo(self):
-        time = randrange(4000,7000,1000)
+        time = randrange(2000,6000,500)
         return time
 
     def gera_fundo(self, pos_x_excluida):
@@ -148,6 +154,7 @@ class Frango(GameObject):
         self.animation_names = ['running']
         GameObject.__init__(self, 'frango', game_data)
 
+        self.tags.append('frango')
         self.dest.size = self.animation.get_src_size()
         self.scale = 6
         self._layer = 2
@@ -160,7 +167,20 @@ class Frango(GameObject):
             self.dest.topleft += self.aproximacao_x
             if self.dest.topleft[0] >= -100:
                 self.state = self.STATE_STOP
+
+        if self.state == self.STATE_RETREATING:
+            self.dest.topleft += Point(-10, 0)
+            if self.dest.topleft[0] <= -self.rect.w:
+                self.scene.chicken = False
+                self.kill()
+
         GameObject.update(self)
+
+    def retreat(self):
+        Sound.stop()
+        Sound.play('songloop.wav')
+        self.state = self.STATE_RETREATING
+
 
 class MarChao(GameObject):
     def __init__(self, game_data):
@@ -176,7 +196,7 @@ class Items(GameObject):
         GameObject.__init__(self, 'uva', game_data)
         self.tags.append('uva')
         self.scale = 4
-        self.dest.topleft = Point(self.screen_size.x, self.screen_size.y // 2)
+        self.dest.topleft = Point(self.screen_size.x, self.screen_size.y // 2 - 200)
         self.vel = Point(-22, 0)
 
     def update(self):
@@ -286,7 +306,6 @@ class Roberto(GameObject):
         self.vidas = len(self.pos_pontos)
         self.pos_roberto_atual = Point(self.screen_size.x - 80, 0)
         self.pos_roberto = Rect((self.pos_roberto_atual), (64, 128))
-
     def render_interface(self):
         self.system.blit(ID='interface_fundo', dest=Rect((self.screen_size.x - 260, 0), (256, 128)))
         self.system.blit(ID='interface_frango', dest=Rect((self.screen_size.x - 240, 0), (64, 128)))
@@ -296,12 +315,13 @@ class Roberto(GameObject):
         self.system.blit(ID='interface_roberto', dest=Rect((self.pos_roberto_atual), (64, 128)))
 
     def soltar_foguete(self):
-        if self.pontos_para_foguete >= 4:
+        if self.pontos_para_foguete >= 7:
             self.pontos_para_foguete = 0
             self.scene.game_objects.append(Foguete('fogo3', self.game_data))
             self.scene.layers.add(self.scene.game_objects[-1])
 
     def on_collision(self, obj):
+        print(self.vidas)
         if obj.has_tag("onda") and self.invencible_state is False:
             self.pontos_para_foguete = 0
             self.invencible = 2000
@@ -313,17 +333,30 @@ class Roberto(GameObject):
                 self.pos_roberto_atual += Point(-40,0)
                 if self.vidas == 0:
                     self.frango_mode()
+            elif self.vidas == 0:
+                print("sem vida")
+                self.system.swap_scene(GameOver())
+                self.scene.state = self.scene.STATE_FINISHED
 
         if obj.has_tag("uva") and self.invencible_state is False:
             self.num_uvas += 1
             obj = self.scene.get_gos_with_tag('uva')
             obj[0].kill()
-            if self.num_uvas >= 5:
+            if self.num_uvas >= 7:
+                self.vidas += 1
                 self.num_uvas = 0
+                self.pos_roberto_atual += Point(40, 0)
+                self.pos_pontos.append(Rect(self.screen_size.x - 200, 0, 64, 128))
+                go = self.scene.get_gos_with_tag("frango")
+                go[0].retreat()
+                item = self.scene.get_gos_with_tag("uva")
+                item[0].kill()
                 #GANHA UMA VIDA
                 print("life up!")
 
     def frango_mode(self):
+        Sound.stop()
+        Sound.play('songboss.wav')
         self.scene.chicken = True
         self.scene.game_objects.append(Frango(self.game_data))
         self.scene.layers.add(self.scene.game_objects[-1])
