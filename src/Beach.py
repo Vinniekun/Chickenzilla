@@ -9,6 +9,11 @@ from engine import Physics
 from random import randrange
 from engine.managers import Sound
 from GameOver import GameOver
+try:
+    import pygame_sdl2
+    pygame_sdl2.import_as_pygame()
+except ImportError:
+    pass
 
 class Beach(Scene):
     def __init__(self):
@@ -31,7 +36,6 @@ class Beach(Scene):
             self.game_objects.append(background)
         self.game_objects.append(MarChao(game_data))
         Sound.play('songloop.wav')
-
         self.next_bg = 4
         Scene.start(self, game_data)
 
@@ -69,14 +73,13 @@ class Beach(Scene):
 
     def create_item(self):
         if self.intervalo_item >= self.intervalo_spawn_item and self.chicken:
-            print("adicionou o item")
             self.game_objects.append(Items('uva', self.game_data))
             self.layers.add(self.game_objects[-1])
             self.intervalo_item = 0
             self.num_item = 0
 
     def rand_item_tempo(self):
-        time = randrange(2000,6000,500)
+        time = randrange(3000,7000,500)
         return time
 
     def gera_fundo(self, pos_x_excluida):
@@ -134,7 +137,7 @@ class Background(GameObject):
 
     def update(self):
 
-        self.dest.topleft += Point(-20, 0)
+        self.dest.topleft += Point(-500, 0) * self.system.delta_time / 1000
         if self.rect.right <= 0:
             self.kill()
             self.scene.gera_fundo(self.rect.left)
@@ -164,7 +167,7 @@ class Frango(GameObject):
 
     def update(self):
         if self.state == self.STATE_ADVANCING:
-            self.dest.topleft += self.aproximacao_x
+            self.dest.topleft += self.aproximacao_x 
             if self.dest.topleft[0] >= -100:
                 self.state = self.STATE_STOP
 
@@ -197,10 +200,10 @@ class Items(GameObject):
         self.tags.append('uva')
         self.scale = 4
         self.dest.topleft = Point(self.screen_size.x, self.screen_size.y // 2 - 200)
-        self.vel = Point(-22, 0)
+        self.vel = Point(-1200, 0)
 
     def update(self):
-        self.dest.topleft += self.vel
+        self.dest.topleft += self.vel * self.system.delta_time / 1000
         GameObject.update(self)
         self.check_kill()
 
@@ -219,12 +222,12 @@ class Onda(GameObject):
         tamanho_onda = self.rect.h
         self.inicio_wave = Point(self.screen_size.x + time, self.screen_size.y - tamanho_onda)
         self.dest.topleft = self.inicio_wave
-        self.vel_onda = Point(-22, 0)
+        self.vel_onda = Point(-1200, 0)
         self.onda_passou = False
         self.roberto_ref = self.scene.get_gos_with_tag('roberto')
 
     def update(self):
-        self.dest.bottomleft += self.vel_onda
+        self.dest.bottomleft += self.vel_onda * self.system.delta_time / 1000
         self.check_position()
         GameObject.update(self)
         self.check_passar_onda()
@@ -234,7 +237,6 @@ class Onda(GameObject):
             self.onda_passou = True
             if self.roberto_ref[0].invencible_state is False:
                 self.roberto_ref[0].pontos_para_foguete += 1
-                print("Num de ondas puladas: ", self.roberto_ref[0].pontos_para_foguete)
 
     def render(self):
         GameObject.render(self)
@@ -288,9 +290,9 @@ class Roberto(GameObject):
         self.tags.append('roberto')
         self.state = self.STATE_ON_GROUND
         self.vel_y = Point(0,0)
-        self.jump_power = Point(0,-2000)
+        self.jump_power = Point(0,-2500)
         self.total_gravity = Point(0, 11000)
-        self.in_air = Point(0, 100)
+        self.in_air = Point(0, 3000)
         self.gravity = Point(self.total_gravity)
         self.updatable = True
         self.invencible = 0
@@ -321,7 +323,6 @@ class Roberto(GameObject):
             self.scene.layers.add(self.scene.game_objects[-1])
 
     def on_collision(self, obj):
-        print(self.vidas)
         if obj.has_tag("onda") and self.invencible_state is False:
             self.pontos_para_foguete = 0
             self.invencible = 2000
@@ -362,6 +363,8 @@ class Roberto(GameObject):
         self.scene.layers.add(self.scene.game_objects[-1])
 
     def update(self):
+        if pygame.key.get_pressed()[pygame.K_ESCAPE]:
+            self.system.__del__()
         self.soltar_foguete()
         if self.invencible_state:
             self.invencible -= self.system.delta_time
@@ -389,7 +392,7 @@ class Roberto(GameObject):
             self.dest.topleft = new_pos
             if pygame.key.get_pressed()[pygame.K_SPACE]:
                 if self.vel_y[1] <= 0:
-                    self.vel_y -= self.in_air
+                    self.vel_y -= self.in_air  * self.system.delta_time / 1000
             if self.dest.topleft[1] >= self.screen_size.y - self.rect.h * 1.3:
                 self.state = self.STATE_ON_GROUND
                 self.dest.topleft = Point(self.dest.topleft[0], 640)
@@ -398,7 +401,6 @@ class Roberto(GameObject):
                 if event.type is pygame.KEYDOWN and event.key is pygame.K_SPACE:
                     self.state = self.STATE_DOUBLE_JUMP
                     self.vel_y = self.jump_power
-                    print("double jump")
 
         elif self.state == self.STATE_DOUBLE_JUMP:
             new_pos, self.vel_y = Physics.mruv(self.dest.topleft, self.vel_y, self.gravity,

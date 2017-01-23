@@ -1,5 +1,10 @@
 import pygame
 from pygame.rect import Rect
+try:
+    import pygame_sdl2
+    pygame_sdl2.import_as_pygame()
+except ImportError:
+    pass
 
 from DebugInfo import DebugInfo
 from engine import Point, Scene, GameObject
@@ -119,6 +124,8 @@ class Roberto(GameObject):
         self.scene.layers.add(self.scene.game_objects[-1])
 
     def update(self):
+        if pygame.key.get_pressed()[pygame.K_ESCAPE]:
+            self.system.__del__()
         self.soltar_foguetes -= self.system.delta_time
         if self.soltar_foguetes <= 0:
             self.soltar_foguete()

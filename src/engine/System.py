@@ -160,8 +160,8 @@ class System:
             self.move_camera(Point(self.camera_target.dest.center) - Point(self.camera.center))
 
         # limpa a tela
-        self.window.fill(pygame.Color(0, 0, 0))
-        self.screen.fill(pygame.Color(255, 255, 255))
+        #self.window.fill(pygame.Color(0, 0, 0))
+        #self.screen.fill(pygame.Color(255, 255, 255))
 
     def render(self):
         """

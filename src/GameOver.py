@@ -8,6 +8,11 @@ from engine.TileMap import TileMap
 from engine import Physics
 from random import randrange
 from engine.managers import Sound
+try:
+    import pygame_sdl2
+    pygame_sdl2.import_as_pygame()
+except ImportError:
+    pass
 
 
 class GameOver(Scene):
@@ -41,6 +46,8 @@ class Interface(GameObject):
         self.surface = pygame.Surface((1920, 1080)).convert_alpha()
 
     def update(self):
+        if pygame.key.get_pressed()[pygame.K_ESCAPE]:
+            self.system.__del__()
         for event in self.system.get_events():
             if event.type is pygame.KEYDOWN and event.key is pygame.K_SPACE:
                 self.system.__del__()
